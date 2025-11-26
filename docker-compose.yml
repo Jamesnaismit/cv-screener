@@ -74,6 +74,22 @@ services:
       - cvscreener_network
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: cvscreener_web
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:${APP_PORT:-8000}
+      - PORT=${WEB_PORT:-3000}
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-3000}:${WEB_PORT:-3000}"
+    networks:
+      - cvscreener_network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     name: cvscreener_postgres_data

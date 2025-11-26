@@ -26,6 +26,13 @@ cp .env.example .env
 make run
 # API:     http://localhost:8000
 # Metrics: http://localhost:9000/metrics
+# Web UI:  http://localhost:3000
+```
+
+4) (Optional) Start the Next.js web UI against the running API:
+
+```bash
+docker compose up web
 ```
 
 ## Core Commands
@@ -94,6 +101,8 @@ Example response:
 - `APP_PORT` — API port (default `8000`)
 - `APP_TOP_K_RESULTS`, `RERANK_ENABLED`, `RERANK_TOP_K`
 - `METRICS_ENABLED`, `METRICS_PORT` (default `9000`)
+- `WEB_PORT` — web UI port (default `3000`)
+- `NEXT_PUBLIC_API_URL` — API base URL for the frontend (default `http://localhost:8000`)
 - Responses are always in English.
 
 ## Notes
