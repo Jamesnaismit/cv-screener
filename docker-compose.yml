@@ -51,7 +51,7 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-rag_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-cvscreener}
-      - APP_MODEL_NAME=${APP_MODEL_NAME:-gpt-4o-mini}
+      - APP_MODEL_NAME=${APP_MODEL_NAME:-gpt-5-mini-2025-08-07}
       - APP_PORT=${APP_PORT:-8000}
       - APP_MAX_HISTORY=${APP_MAX_HISTORY:-10}
       - APP_TOP_K_RESULTS=${APP_TOP_K_RESULTS:-5}

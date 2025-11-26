@@ -17,6 +17,7 @@ def mock_retriever():
             "url": "cv://cv-03-jonathan-dyer",
             "title": "CV Jonathan Dyer",
             "similarity": 0.95,
+            "relevance_score": 0.95,
             "metadata": {"language": "en"},
         },
         {
@@ -24,6 +25,7 @@ def mock_retriever():
             "url": "cv://cv-03-jonathan-dyer",
             "title": "Experiencia",
             "similarity": 0.87,
+            "relevance_score": 0.87,
             "metadata": {"language": "en"},
         },
     ]
@@ -36,9 +38,7 @@ def rag_chain(mock_retriever):
     return ConversationalRAGChain(
         retriever=mock_retriever,
         openai_api_key="test_key",
-        model_name="gpt-4o-mini",
-        temperature=0.7,
-        max_tokens=500,
+        model_name="gpt-5-mini-2025-08-07",
         max_history=5,
     )
 
@@ -52,13 +52,11 @@ class TestConversationalRAGChain:
         chain = ConversationalRAGChain(
             retriever=mock_retriever,
             openai_api_key="test_key",
-            model_name="gpt-4o-mini",
+            model_name="gpt-5-mini-2025-08-07",
         )
 
         assert chain.retriever == mock_retriever
-        assert chain.model_name == "gpt-4o-mini"
-        assert chain.temperature == 0.7
-        assert chain.max_tokens == 1000
+        assert chain.model_name == "gpt-5-mini-2025-08-07"
         assert chain.max_history == 10
         assert len(chain.conversation_history) == 0
 
@@ -70,12 +68,14 @@ class TestConversationalRAGChain:
                 "url": "https://test1.com",
                 "title": "Test 1",
                 "similarity": 0.95,
+                "relevance_score": 0.95,
             },
             {
                 "content": "Test content 2",
                 "url": "https://test2.com",
                 "title": "Test 2",
                 "similarity": 0.85,
+                "relevance_score": 0.85,
             },
         ]
 
@@ -85,8 +85,7 @@ class TestConversationalRAGChain:
         assert "Test content 2" in context
         assert "https://test1.com" in context
         assert "https://test2.com" in context
-        assert "95.0%" in context or "0.95" in context
-        assert "85.0%" in context or "0.85" in context
+        # Relevance scores are no longer shown in context
 
     def test_format_context_empty(self, rag_chain):
         """Test context formatting with no documents."""
@@ -156,19 +155,22 @@ class TestConversationalRAGChain:
         assert rag_chain.prompt_optimizer is not None
         assert hasattr(rag_chain.prompt_optimizer, 'create_prompt')
 
-    def test_context_includes_similarity_scores(self, rag_chain):
-        """Test that formatted context includes similarity scores."""
+    def test_context_includes_all_fields(self, rag_chain):
+        """Test that formatted context includes all required fields."""
         docs = [
             {
-                "content": "Test",
+                "content": "Test content here",
                 "url": "https://test.com",
-                "title": "Test",
+                "title": "Test Document",
                 "similarity": 0.92,
+                "relevance_score": 0.92,
             }
         ]
 
         context = rag_chain._format_context_with_quality_tiers(docs)
-        assert "92.0%" in context or "0.92" in context or "92" in context
+        assert "Test content here" in context
+        assert "https://test.com" in context
+        assert "Test Document" in context
 
     def test_format_chat_history_respects_max(self, rag_chain):
         """Test that chat history formatting respects max_history."""
@@ -183,3 +185,89 @@ class TestConversationalRAGChain:
         assert "Question 4" in history
         assert "Question 0" not in history
         assert "Question 1" not in history
+
+    def test_normalize_question_strips_trailing_punctuation(self, rag_chain):
+        """Ensure trailing punctuation/spacing does not change normalized question."""
+        normalized = rag_chain._normalize_question("Evelyn Hamilton experience?   ")
+        assert normalized == "Evelyn Hamilton experience"
+
+    def test_relevance_score_bm25_only_documents(self, rag_chain):
+        """Test that BM25-only documents (with relevance_score but no similarity) are included in context."""
+        docs = [
+            {
+                "content": "Python developer with 5 years experience",
+                "url": "cv://cv-01",
+                "title": "Candidate 1",
+                "relevance_score": 0.75,  # Good relevance from BM25
+                "similarity": None,  # No vector similarity (BM25-only)
+            },
+            {
+                "content": "Java backend engineer",
+                "url": "cv://cv-02",
+                "title": "Candidate 2",
+                "relevance_score": 0.45,  # Medium relevance
+                "similarity": None,
+            },
+        ]
+
+        context = rag_chain._format_context_with_quality_tiers(docs)
+
+        # All retrieved sources should be included
+        assert "Python developer" in context
+        assert "Java backend" in context
+        # Relevance scores are no longer shown in context
+
+    def test_all_retrieved_sources_included(self, rag_chain):
+        """Test that all retrieved sources are included in context regardless of score."""
+        docs = [
+            {
+                "content": "High relevance content",
+                "url": "cv://cv-01",
+                "title": "Doc 1",
+                "relevance_score": 0.92,
+                "similarity": 0.3,
+            },
+            {
+                "content": "Medium relevance content",
+                "url": "cv://cv-02",
+                "title": "Doc 2",
+                "relevance_score": 0.45,
+                "similarity": 0.2,
+            },
+            {
+                "content": "Lower relevance content",
+                "url": "cv://cv-03",
+                "title": "Doc 3",
+                "relevance_score": 0.25,
+                "similarity": 0.1,
+            },
+        ]
+
+        context = rag_chain._format_context_with_quality_tiers(docs)
+
+        assert "High relevance content" in context
+        assert "Medium relevance content" in context
+        assert "Lower relevance content" in context
+
+    def test_format_context_with_relevance_score_only(self, rag_chain):
+        """Test context formatting when documents only have relevance_score (no similarity)."""
+        docs = [
+            {
+                "content": "Test content 1",
+                "url": "cv://test1",
+                "title": "Test 1",
+                "relevance_score": 0.88,
+                # No similarity field
+            },
+            {
+                "content": "Test content 2",
+                "url": "cv://test2",
+                "title": "Test 2",
+                "relevance_score": 0.55,
+            },
+        ]
+
+        context = rag_chain._format_context_with_quality_tiers(docs)
+
+        assert "Test content 1" in context
+        assert "Test content 2" in context

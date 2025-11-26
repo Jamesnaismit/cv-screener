@@ -23,12 +23,10 @@ class AppConfig:
         self.database_url: str = os.getenv("DATABASE_URL", "")
 
         # ═══════════════════ Model Configuration ═══════════════════
-        self.model_name: str = os.getenv("APP_MODEL_NAME", "gpt-4o-mini")
+        self.model_name: str = os.getenv("APP_MODEL_NAME", "gpt-5-mini-2025-08-07")
         self.embedding_model: str = os.getenv(
             "EMBEDDING_MODEL", "text-embedding-3-small"
         )
-        self.temperature: float = 0.7
-        self.max_tokens: int = 1000
 
         # ═══════════════════ Application Settings ═══════════════════
         self.port: int = int(os.getenv("APP_PORT", "8000"))
@@ -81,10 +79,6 @@ class AppConfig:
             errors.append(f"RERANK_TOP_K must be positive (got {self.rerank_top_k})")
 
         # Validate model parameters
-        if self.temperature < 0 or self.temperature > 2:
-            errors.append(f"Temperature must be between 0 and 2 (got {self.temperature})")
-        if self.max_tokens <= 0:
-            errors.append(f"Max tokens must be positive (got {self.max_tokens})")
 
         # Validate cache configuration
         if self.cache_enabled and self.cache_ttl <= 0:

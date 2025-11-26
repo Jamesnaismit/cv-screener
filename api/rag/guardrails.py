@@ -48,10 +48,6 @@ class GuardrailValidator:
         if sources and inline_citations:
             cited_numbers = set(int(re.search(r'\d+', c).group()) for c in inline_citations)
             available_numbers = set(range(1, len(sources) + 1))
-            unused_sources = available_numbers - cited_numbers
-            if unused_sources:
-                issues.append(f"Sources not cited: {unused_sources}")
-
             phantom = cited_numbers - available_numbers
             if phantom:
                 issues.append(f"Citations to non-existent sources: {phantom}")

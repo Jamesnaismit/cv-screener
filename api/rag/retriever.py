@@ -114,12 +114,14 @@ class VectorRetriever:
 
             results = []
             for row in cur.fetchall():
+                similarity_score = float(row[4])
                 results.append({
                     "content": row[0],
                     "metadata": row[1],
                     "url": row[2],
                     "title": row[3],
-                    "similarity": float(row[4]),
+                    "similarity": similarity_score,
+                    "relevance_score": similarity_score,  # Unified score for quality tiers
                 })
 
         logger.info(f"Retrieved {len(results)} results for query: {query[:50]}...")

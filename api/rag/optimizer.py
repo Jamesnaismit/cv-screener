@@ -57,7 +57,7 @@ class PromptOptimizer:
             chat_history: str,
             question: str,
             chat_history_list: Optional[List[Tuple[str, str]]] = None,
-    ) -> Tuple[str, Dict[str, Any]]:
+    ) -> Tuple[List[Dict[str, str]], Dict[str, Any]]:
         """
         Create optimized prompt with automatic analysis and adaptation.
 
@@ -68,7 +68,7 @@ class PromptOptimizer:
             chat_history_list: Optional list of (question, answer) tuples for augmentation.
 
         Returns:
-            Tuple of (optimized_prompt, analysis_metadata)
+            Tuple of (messages, analysis_metadata)
         """
         language = self.analyzer.detect_language(question)
         complexity = self.analyzer.classify_complexity(question)
@@ -80,14 +80,22 @@ class PromptOptimizer:
                 question, chat_history_list
             )
 
-        prompt = PromptTemplate.create_full_prompt(
-            context=context,
-            chat_history=chat_history,
-            question=question,
-            language=language,
-            query_complexity=complexity,
-            include_few_shot=self.use_few_shot,
+        system_prompt = PromptTemplate.create_system_prompt(language, complexity)
+        user_prompt = PromptTemplate.create_user_prompt(
+                context=context,
+                chat_history=chat_history,
+                question=question,
+                language=language,
+                query_complexity=complexity,
+                include_few_shot=self.use_few_shot,
         )
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+
+        prompt_length = len(system_prompt) + len(user_prompt)
 
         metadata = {
             "language": language,
@@ -95,15 +103,15 @@ class PromptOptimizer:
             "original_question": original_question,
             "augmented_question": question if was_augmented else None,
             "was_augmented": was_augmented,
-            "prompt_length": len(prompt),
+            "prompt_length": prompt_length,
         }
 
         logger.info(
             f"Created prompt: lang={language}, complexity={complexity}, "
-            f"augmented={was_augmented}, length={len(prompt)}"
+            f"augmented={was_augmented}, length={prompt_length}"
         )
 
-        return prompt, metadata
+        return messages, metadata
 
     def validate_response(
             self,

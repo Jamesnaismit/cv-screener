@@ -6,7 +6,7 @@ candidate information with RAG.
 ## Stack
 
 - Docker Compose (PostgreSQL + pgvector, Embedder, API)
-- OpenAI `text-embedding-3-small` for embeddings and `gpt-4o-mini` for generation
+- OpenAI `text-embedding-3-small` for embeddings and `gpt-5-mini-2025-08-07` for generation
 - FastAPI with hybrid retrieval (vector + BM25) and Prometheus metrics
 
 ## Quick Start
@@ -66,7 +66,7 @@ Example response:
     }
   ],
   "metadata": {
-    "model": "gpt-4o-mini",
+    "model": "gpt-5-mini-2025-08-07",
     "retrieved": 3,
     "top_k": 5
   }
@@ -89,7 +89,7 @@ Example response:
 - `POSTGRES_*` / `DATABASE_URL` — database connection (default DB: `cvscreener`)
 - `EMBEDDER_INPUT_DIR` — defaults to `/data/feed` (mounted from `./feed`)
 - `EMBEDDER_CHUNK_SIZE`, `EMBEDDER_CHUNK_OVERLAP` — text splitting
-- `APP_MODEL_NAME` — generation model (default `gpt-4o-mini`)
+- `APP_MODEL_NAME` — generation model (default `gpt-5-mini-2025-08-07`)
 - `EMBEDDING_DIMENSION` — default `1536` (keep in sync with `database/init.sql`)
 - `APP_PORT` — API port (default `8000`)
 - `APP_TOP_K_RESULTS`, `RERANK_ENABLED`, `RERANK_TOP_K`

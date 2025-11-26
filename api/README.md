@@ -33,7 +33,7 @@ Key variables (see `.env.example`):
 
 - `OPENAI_API_KEY` (required)
 - `DATABASE_URL`
-- `APP_MODEL_NAME` (default `gpt-4o-mini`)
+- `APP_MODEL_NAME` (default `gpt-5-mini-2025-08-07`)
 - `APP_PORT` (default `8000`)
 - `APP_TOP_K_RESULTS`, `RERANK_ENABLED`, `RERANK_TOP_K`
 - `CACHE_ENABLED`, `CACHE_TTL`, `REDIS_URL`

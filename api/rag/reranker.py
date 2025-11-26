@@ -228,17 +228,16 @@ class HybridRetriever:
                     "bm25_score_norm": r["bm25_score_normalized"],
                 }
 
-        # Calculate hybrid scores
         for doc in merged.values():
-            doc["hybrid_score"] = (
+            doc["relevance_score"] = (
                 self.alpha * doc["vector_score"]
                 + (1 - self.alpha) * doc["bm25_score_norm"]
             )
 
-        # Sort by hybrid score
+        # Sort by relevance score
         reranked = sorted(
             merged.values(),
-            key=lambda x: x["hybrid_score"],
+            key=lambda x: x["relevance_score"],
             reverse=True,
         )
 

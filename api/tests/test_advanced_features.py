@@ -85,14 +85,17 @@ def test_prompt_optimizer():
         validate_output=True
     )
 
-    prompt = optimizer.create_prompt(
+    messages, metadata = optimizer.create_prompt(
         context="Evelyn Hamilton is a data engineer...",
         chat_history="",
         question="What is the profile of Evelyn Hamilton?"
     )
 
-    assert "META-INSTRUCTIONS" in prompt[0] or "INSTRUCTIONS" in prompt[0], "Should include guardrails"
-    assert "Example" in prompt[0], "Should include few-shot examples"
+    assert messages[0]["role"] == "system"
+    assert "META-INSTRUCTIONS" in messages[0]["content"] or "INSTRUCTIONS" in messages[0]["content"], \
+        "Should include guardrails in system message"
+    assert "Example" in messages[1]["content"], "Should include few-shot examples in user message"
+    assert metadata["prompt_length"] > 0
     print("✅ Prompt includes guardrails and few-shot")
 
     response = "Evelyn Hamilton is a data engineer specialized in AWS [1]."

@@ -45,7 +45,8 @@ class Source(BaseModel):
     title: Optional[str] = None
     url: Optional[str] = None
     content: Optional[str] = None
-    similarity: Optional[float] = None
+    similarity: Optional[float] = None  # Deprecated: kept for backward compatibility
+    relevance_score: Optional[float] = None  # Unified score (replaces similarity)
     metadata: Optional[dict] = None
 
 
@@ -150,8 +151,6 @@ def create_app() -> FastAPI:
             retriever=retriever,
             openai_api_key=config.openai_api_key,
             model_name=config.model_name,
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
             max_history=config.max_history,
             cache=cache,
             metrics=metrics,
