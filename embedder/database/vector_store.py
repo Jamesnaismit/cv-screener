@@ -22,17 +22,20 @@ class VectorStore:
     PostgreSQL vector store for document embeddings.
     """
 
-    def __init__(self, database_url: str) -> None:
+    def __init__(self, database_url: str, ensure_schema: bool = True) -> None:
         """
         Initialize the vector store.
 
         Args:
             database_url: PostgreSQL connection URL.
+            ensure_schema: Whether to create/ensure schema on init.
         """
         self.database_url = database_url
         self.conn = None
         self._connect()
-        self._ensure_schema()
+        self.ensure_schema = ensure_schema
+        if self.ensure_schema:
+            self._ensure_schema()
 
     def _connect(self) -> None:
         """Establish database connection."""
@@ -92,7 +95,8 @@ class VectorStore:
     def _ensure_schema(self) -> None:
         """Ensure required tables exist (documents, embeddings)."""
         self._ensure_connection()
-        with self.conn.cursor() as cur:
+        cur = self.conn.cursor()
+        try:
             cur.execute("""
                 CREATE EXTENSION IF NOT EXISTS vector;
                 
@@ -126,6 +130,8 @@ class VectorStore:
                 CREATE INDEX IF NOT EXISTS idx_embeddings_metadata ON embeddings USING gin(metadata);
             """)
             self.conn.commit()
+        finally:
+            cur.close()
         logger.info("Schema ensured (documents, embeddings).")
 
     def close(self) -> None:

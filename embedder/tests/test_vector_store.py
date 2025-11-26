@@ -26,7 +26,7 @@ class TestVectorStore:
         """Test vector store initialization."""
         mock_connect.return_value = Mock()
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
 
         assert store.database_url == "postgresql://test"
         mock_connect.assert_called_once_with("postgresql://test")
@@ -38,11 +38,12 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = (True,)
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         exists = store.document_exists("https://test.com")
 
         assert exists is True
-        mock_cursor.execute.assert_called_once()
+        # one call for select exists
+        assert mock_cursor.execute.call_count == 1
 
     @patch('database.vector_store.psycopg2.connect')
     def test_document_exists_false(self, mock_connect):
@@ -51,7 +52,7 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = (False,)
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         exists = store.document_exists("https://nonexistent.com")
 
         assert exists is False
@@ -63,7 +64,7 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = (123,)
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         doc_id = store.get_document_id("https://test.com")
 
         assert doc_id == 123
@@ -75,7 +76,7 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = None
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         doc_id = store.get_document_id("https://nonexistent.com")
 
         assert doc_id is None
@@ -87,7 +88,7 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = (456,)
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
 
         doc_id = store.insert_document(
             url="https://test.com",
@@ -107,7 +108,7 @@ class TestVectorStore:
         mock_conn, mock_cursor = create_mock_db()
         mock_connect.return_value = mock_conn
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         store.delete_embeddings_for_document(123)
 
         mock_cursor.execute.assert_called_once()
@@ -119,7 +120,7 @@ class TestVectorStore:
         mock_conn, mock_cursor = create_mock_db()
         mock_connect.return_value = mock_conn
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         count = store.insert_embeddings([])
 
         assert count == 0
@@ -130,7 +131,7 @@ class TestVectorStore:
         mock_conn, mock_cursor = create_mock_db()
         mock_connect.return_value = mock_conn
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
 
         chunks = [
             {"chunk_text": "test", "chunk_index": 0, "url": "test.com", "title": "Test"}
@@ -147,7 +148,7 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = (1,)  # document_id
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
 
         chunks = [
             {
@@ -172,7 +173,7 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = (42,)
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         count = store.get_document_count()
 
         assert count == 42
@@ -184,7 +185,7 @@ class TestVectorStore:
         mock_connect.return_value = mock_conn
         mock_cursor.fetchone.return_value = (100,)
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         count = store.get_embedding_count()
 
         assert count == 100
@@ -199,7 +200,7 @@ class TestVectorStore:
             ("Chunk 2", {"index": 1}, "https://test2.com", "Test 2", 0.87)
         ]
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
 
         query_embedding = [0.1] * 1536
         results = store.search_similar(query_embedding, top_k=2)
@@ -218,7 +219,7 @@ class TestVectorStore:
         mock_conn.closed = True
         mock_connect.return_value = mock_conn
 
-        store = VectorStore(database_url="postgresql://test")
+        store = VectorStore(database_url="postgresql://test", ensure_schema=False)
         store.conn.closed = True
 
         store._ensure_connection()
