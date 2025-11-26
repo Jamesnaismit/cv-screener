@@ -1,0 +1,9 @@
+openai==2.7.2
+langchain==1.0.5
+langchain-openai==1.0.2
+langchain-text-splitters==1.0.0
+psycopg2-binary==2.9.9
+python-dotenv==1.0.1
+tenacity==8.2.3
+pytest==7.4.3
+pypdf==4.2.0
