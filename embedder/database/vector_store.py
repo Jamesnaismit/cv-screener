@@ -8,7 +8,10 @@ in PostgreSQL using the pgvector extension.
 import json
 import logging
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
+
 import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import execute_values, Json
 
 logger = logging.getLogger(__name__)
@@ -29,6 +32,7 @@ class VectorStore:
         self.database_url = database_url
         self.conn = None
         self._connect()
+        self._ensure_schema()
 
     def _connect(self) -> None:
         """Establish database connection."""
@@ -36,14 +40,93 @@ class VectorStore:
             self.conn = psycopg2.connect(self.database_url)
             logger.info("Successfully connected to database")
         except Exception as e:
-            logger.error(f"Failed to connect to database: {e}")
-            raise
+            if "does not exist" in str(e).lower():
+                logger.warning(f"Database missing, creating it: {e}")
+                self._create_database_if_missing()
+                self.conn = psycopg2.connect(self.database_url)
+                logger.info("Successfully connected after creating database")
+            else:
+                logger.error(f"Failed to connect to database: {e}")
+                raise
+
+    def _create_database_if_missing(self) -> None:
+        """Create the target database if it does not exist."""
+        parsed = urlparse(self.database_url)
+        db_name = (parsed.path or "").lstrip("/")
+        host = parsed.hostname or "localhost"
+        port = parsed.port or 5432
+        user = parsed.username or ""
+        password = parsed.password or ""
+
+        admin_dsn = f"dbname=postgres user={user} password={password} host={host} port={port}"
+
+        conn = psycopg2.connect(admin_dsn)
+        try:
+            conn.autocommit = True
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT 1 FROM pg_database WHERE datname = %s",
+                    (db_name,),
+                )
+                exists = cur.fetchone()
+                if exists:
+                    logger.info("Database already exists, skipping creation")
+                    return
+
+                cur.execute(
+                    sql.SQL('CREATE DATABASE {} OWNER {}').format(
+                        sql.Identifier(db_name),
+                        sql.Identifier(user),
+                    )
+                )
+                logger.info(f"Database '{db_name}' created")
+        finally:
+            conn.close()
 
     def _ensure_connection(self) -> None:
         """Ensure database connection is active."""
         if self.conn is None or self.conn.closed:
             logger.warning("Database connection lost, reconnecting...")
             self._connect()
+
+    def _ensure_schema(self) -> None:
+        """Ensure required tables exist (documents, embeddings)."""
+        self._ensure_connection()
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                CREATE EXTENSION IF NOT EXISTS vector;
+                
+                CREATE TABLE IF NOT EXISTS documents (
+                    id SERIAL PRIMARY KEY,
+                    url TEXT UNIQUE NOT NULL,
+                    title TEXT,
+                    content TEXT NOT NULL,
+                    metadata JSONB DEFAULT '{}'::jsonb,
+                    content_hash TEXT,
+                    last_ingested_at TIMESTAMP DEFAULT NOW(),
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                );
+
+                CREATE TABLE IF NOT EXISTS embeddings (
+                    id SERIAL PRIMARY KEY,
+                    document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+                    chunk_index INTEGER NOT NULL,
+                    chunk_text TEXT NOT NULL,
+                    embedding vector(1536) NOT NULL,
+                    metadata JSONB DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_documents_url ON documents(url);
+                CREATE INDEX IF NOT EXISTS idx_documents_content_hash ON documents(content_hash);
+                CREATE INDEX IF NOT EXISTS idx_embeddings_document_id ON embeddings(document_id);
+                CREATE INDEX IF NOT EXISTS idx_embeddings_vector ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+                CREATE INDEX IF NOT EXISTS idx_documents_metadata ON documents USING gin(metadata);
+                CREATE INDEX IF NOT EXISTS idx_embeddings_metadata ON embeddings USING gin(metadata);
+            """)
+            self.conn.commit()
+        logger.info("Schema ensured (documents, embeddings).")
 
     def close(self) -> None:
         """Close database connection."""

@@ -1,3 +1,4 @@
+name: cvscreener
 services:
   postgres:
     image: pgvector/pgvector:pg15
@@ -41,6 +42,37 @@ services:
         condition: service_healthy
     networks:
       - cvscreener_network
+
+  api:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    container_name: cvscreener_api
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-rag_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-cvscreener}
+      - APP_MODEL_NAME=${APP_MODEL_NAME:-gpt-4o-mini}
+      - APP_PORT=${APP_PORT:-8000}
+      - APP_MAX_HISTORY=${APP_MAX_HISTORY:-10}
+      - APP_TOP_K_RESULTS=${APP_TOP_K_RESULTS:-5}
+      - APP_LOG_LEVEL=${APP_LOG_LEVEL:-INFO}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
+      - CACHE_ENABLED=${CACHE_ENABLED:-true}
+      - CACHE_TTL=${CACHE_TTL:-3600}
+      - REDIS_URL=${REDIS_URL:-}
+      - RERANK_ENABLED=${RERANK_ENABLED:-true}
+      - RERANK_TOP_K=${RERANK_TOP_K:-20}
+      - METRICS_ENABLED=${METRICS_ENABLED:-true}
+      - METRICS_PORT=${METRICS_PORT:-9000}
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+      - "${METRICS_PORT:-9000}:${METRICS_PORT:-9000}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cvscreener_network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
