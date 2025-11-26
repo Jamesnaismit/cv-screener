@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from rag.cache import create_cache, MemoryCache
 from rag.metrics import MetricsCollector
-from rag.prompts import PromptOptimizer, GuardrailValidator
+from rag import PromptOptimizer, GuardrailValidator
 from rag.reranker import SimpleReranker
 
 

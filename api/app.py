@@ -20,7 +20,7 @@ from rag import VectorRetriever, ConversationalRAGChain
 from rag.cache import create_cache
 from rag.metrics import init_metrics
 from rag.reranker import HybridRetriever
-from rag.prompts import PromptOptimizer
+from rag import PromptOptimizer
 
 # Configure logging
 logging.basicConfig(

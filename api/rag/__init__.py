@@ -5,7 +5,10 @@ from .chain import ConversationalRAGChain
 from .cache import ResponseCache, create_cache
 from .metrics import MetricsCollector, init_metrics, get_metrics
 from .reranker import HybridRetriever, SimpleReranker
-from .prompts import PromptOptimizer, PromptTemplate, GuardrailValidator
+from .optimizer import PromptOptimizer
+from .prompt_template import PromptTemplate
+from .guardrails import GuardrailValidator
+from .query_analyzer import QueryAnalyzer
 
 __all__ = [
     "VectorRetriever",
@@ -20,4 +23,5 @@ __all__ = [
     "PromptOptimizer",
     "PromptTemplate",
     "GuardrailValidator",
+    "QueryAnalyzer",
 ]

@@ -22,7 +22,7 @@ class VectorStore:
     PostgreSQL vector store for document embeddings.
     """
 
-    def __init__(self, database_url: str, ensure_schema: bool = True) -> None:
+    def __init__(self, database_url: str, ensure_schema: bool = False) -> None:
         """
         Initialize the vector store.
 
@@ -32,13 +32,12 @@ class VectorStore:
         """
         self.database_url = database_url
         self.conn = None
-        self._connect()
         self.ensure_schema = ensure_schema
-        if self.ensure_schema:
-            self._ensure_schema()
+        self._connect()
 
     def _connect(self) -> None:
         """Establish database connection."""
+        created_db = False
         try:
             self.conn = psycopg2.connect(self.database_url)
             logger.info("Successfully connected to database")
@@ -46,11 +45,14 @@ class VectorStore:
             if "does not exist" in str(e).lower():
                 logger.warning(f"Database missing, creating it: {e}")
                 self._create_database_if_missing()
+                created_db = True
                 self.conn = psycopg2.connect(self.database_url)
                 logger.info("Successfully connected after creating database")
             else:
                 logger.error(f"Failed to connect to database: {e}")
                 raise
+        if created_db or self.ensure_schema:
+            self._ensure_schema()
 
     def _create_database_if_missing(self) -> None:
         """Create the target database if it does not exist."""

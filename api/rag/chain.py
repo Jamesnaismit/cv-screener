@@ -12,7 +12,7 @@ from openai import OpenAI
 
 from .cache import ResponseCache
 from .metrics import MetricsCollector
-from .prompts import PromptOptimizer
+from .optimizer import PromptOptimizer
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,6 @@ class ConversationalRAGChain:
     - Chain-of-Thought for complex queries
     - Enhanced validation
     """
-
-    # SYSTEM_PROMPT removed - now handled by PromptOptimizer in prompts.py
 
     def __init__(
         self,
