@@ -17,16 +17,20 @@ Technologies and services used across the app.
 
 Fast path to run the database, embed CVs, and expose the API/web UI.
 
-1) Copy envs and set secrets:
+1) Clone the repo
+
+2) Copy envs and set secrets:
 
 ```bash
 cp .env.example .env
 # set OPENAI_API_KEY and POSTGRES_PASSWORD
 ```
 
-2) Drop your CV PDFs into `feed/`.
+3) Drop your CV PDFs into `feed/`.
+   - Right now is prefilled with some samples
+   - You can use the [dummy-cv-generator](https://github.com/poacosta/dummy-cv-generator) project to generate new ones for demo purposes.
 
-3) Run the full pipeline (DB -> embed feed -> build API -> start web UI):
+4) Run the full pipeline (DB -> embed feed -> build API -> start web UI):
 
 ```bash
 make run
@@ -35,18 +39,17 @@ make run
 # Metrics: http://localhost:9000/metrics
 ```
 
-4) (Optional) Start the Next.js web UI against the running API:
+5) Enjoy at http://localhost:3000
 
-```bash
-docker compose up web
-```
+<img width="1851" height="978" alt="dark" src="https://github.com/user-attachments/assets/6140135a-5b74-4bd9-9683-e92a7b8d713c" />
+<img width="1851" height="978" alt="light" src="https://github.com/user-attachments/assets/fce0553b-7650-40e2-89e1-2ac16fac5bb0" />
 
 ## Core Commands
 
 Make targets for bringing up services and running tests.
 
 - `make setup`        — start PostgreSQL
-- `make pipeline`     — embed feed and start the API
+- `make pipeline`     — embed feed, build the API and start the Web UI
 - `make run`          — setup + pipeline
 - `make test`         — run embedder + API tests
 
@@ -62,20 +65,25 @@ Focused test commands for each component.
 High-level ingestion and serving flow across services.
 
 ```mermaid
-flowchart LR
-    Feed[feed/*.pdf\nCV PDFs] --> Loader[CVLoader\npypdf + content hash]
-    Loader --> Chunker[DocumentChunker\nrecursive splitter]
-    Chunker --> Embed[EmbeddingGenerator\nOpenAI embeddings]
-    Embed --> DB[(PostgreSQL + pgvector\nembeddings + documents)]
+---
+config:
+  theme: neutral
+  layout: elk
+---
+flowchart
+    Feed[feed/*.pdf CV PDFs] --> Loader[CVLoader pypdf + content hash]
+    Loader --> Chunker[DocumentChunker recursive splitter]
+    Chunker --> Embed[EmbeddingGenerator OpenAI embeddings]
+    Embed --> DB[(PostgreSQL + pgvector embeddings + documents)]
 
-    User[User / Web UI] --> API[FastAPI /query\nConversationalRAGChain]
-    API --> Retriever[Hybrid retriever\nvector + BM25]
+    User[User / Web UI] --> API[FastAPI /query ConversationalRAGChain]
+    API --> Retriever[Hybrid retriever vector + BM25]
     Retriever --> DB
     DB --> Retriever
-    Retriever --> Prompt[PromptOptimizer\nPromptTemplate + guardrails]
+    Retriever --> Prompt[PromptOptimizer PromptTemplate + guardrails]
     Prompt --> LLM[OpenAI Chat Completions]
     LLM --> API
-    API --> Cache[Response cache\nRedis or in-memory]
+    API --> Cache[Response cache Redis or in-memory]
     Cache -. reuse .-> API
     API --> Metrics[Prometheus /metrics]
     API --> Web[Next.js frontend]
