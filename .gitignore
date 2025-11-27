@@ -81,6 +81,3 @@ dmypy.json
 
 # PyCharm
 .idea/
-
-feed/*
-!feed/.keep
