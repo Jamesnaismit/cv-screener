@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-slow test-embedder test-app test-api help setup pipeline run
+.PHONY: test test-unit test-integration test-slow test-embedder test-api test-api help setup pipeline run
 
 help:
 	@echo "Available commands:"
@@ -14,7 +14,7 @@ help:
 	@echo "  make test-integration  - Run only integration tests"
 	@echo "  make test-slow         - Run slow tests"
 	@echo "  make test-embedder     - Run embedder tests"
-	@echo "  make test-app          - Run API tests"
+	@echo "  make test-api          - Run API tests"
 
 setup:
 	@echo "=========================================="
@@ -31,13 +31,19 @@ pipeline:
 	@echo "      RUNNING FULL PIPELINE"
 	@echo "=========================================="
 	@echo ""
-	@echo "Step 1/2: Embedding CV feed..."
+	@echo "Step 1/3: Embedding CV feed..."
+	@echo "------------------------------------------"
 	@docker compose run --rm embedder python embedder.py
 	@echo ""
-	@echo "Step 2/2: Starting API..."
+	@echo "Step 2/3: Build API..."
 	@echo "------------------------------------------"
 	@echo "API will be available at http://localhost:8000"
-	@docker compose up api
+	@docker compose build api
+	@echo ""
+	@echo "Step 3/3: Starting Web App..."
+	@echo "------------------------------------------"
+	@echo "Site will be available at http://localhost:3000"
+	@docker compose up web
 
 run: setup pipeline
 
@@ -118,7 +124,7 @@ test-embedder:
 	@echo "      EMBEDDER TESTS COMPLETED"
 	@echo "=========================================="
 
-test-app:
+test-api:
 	@echo "=========================================="
 	@echo "        TESTING API COMPONENT"
 	@echo "=========================================="
@@ -126,5 +132,3 @@ test-app:
 	@echo "=========================================="
 	@echo "        API TESTS COMPLETED"
 	@echo "=========================================="
-
-test-api: test-app

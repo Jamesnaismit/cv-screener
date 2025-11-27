@@ -3,17 +3,34 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
+import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import { Loader2, Send, FileText, ChevronRight, User, Bot } from "lucide-react"
+import {
+  Loader2,
+  Send,
+  FileText,
+  ChevronRight,
+  ChevronsUpDown,
+  User,
+  Bot,
+  ExternalLink,
+  Sparkles,
+  ShieldCheck,
+  Radar,
+  Gauge,
+} from "lucide-react"
 
 interface QueryResponse {
   answer: string
   sources: Array<{
-    candidate_name?: string
-    score?: number
+    title?: string
+    url?: string
     content?: string
+    similarity?: number
+    relevance_score?: number
+    metadata?: Record<string, unknown>
   }>
 }
 
@@ -33,25 +50,42 @@ export default function CVScreener() {
   const [messages, setMessages] = useState<Message[]>([])
   const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [openSources, setOpenSources] = useState<Record<string, boolean>>({})
+
+  const markdownComponents = {
+    ul: (props: React.HTMLAttributes<HTMLUListElement>) => (
+      <ul className="list-disc space-y-1 pl-5" {...props} />
+    ),
+    ol: (props: React.HTMLAttributes<HTMLOListElement>) => (
+      <ol className="list-decimal space-y-1 pl-5" {...props} />
+    ),
+    li: (props: React.HTMLAttributes<HTMLLIElement>) => <li className="leading-relaxed" {...props} />,
+  }
+
+  const toSourceLink = (url?: string) => {
+    if (!url) return null
+    if (url.startsWith("http://") || url.startsWith("https://")) return url
+    const cleaned = url.replace("cv://", "").replace(/^\/+/, "")
+    return `${API_BASE_URL}/cv/${encodeURIComponent(cleaned)}`
+  }
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const handleQuery = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!question.trim()) return
+  const runQuery = async (prompt: string) => {
+    const trimmed = prompt.trim()
+    if (!trimmed) return
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       type: "user",
-      content: question.trim(),
+      content: trimmed,
       timestamp: new Date(),
     }
     setMessages((prev) => [...prev, userMessage])
 
-    const currentQuestion = question.trim()
     setQuestion("")
     setLoading(true)
     setError(null)
@@ -63,7 +97,7 @@ export default function CVScreener() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          question: currentQuestion,
+          question: trimmed,
           top_k: 5,
         }),
       })
@@ -75,7 +109,7 @@ export default function CVScreener() {
       const data: QueryResponse = await res.json()
 
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         type: "assistant",
         content: data.answer,
         sources: data.sources,
@@ -90,6 +124,12 @@ export default function CVScreener() {
     }
   }
 
+  const handleQuery = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (loading) return
+    await runQuery(question)
+  }
+
   const exampleQuestions = [
     "What AWS experience does Evelyn Hamilton have?",
     "Which candidates have React experience?",
@@ -98,186 +138,267 @@ export default function CVScreener() {
   ]
 
   const handleExampleClick = (q: string) => {
+    if (loading) return
     setQuestion(q)
+    void runQuery(q)
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary">
-                <FileText className="size-5 text-primary-foreground" />
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-50">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.12),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.1),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(74,222,128,0.08),transparent_30%)]" />
+
+      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 py-10 lg:px-6">
+        <header className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4 shadow-lg shadow-sky-900/20 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-emerald-400 text-slate-950 shadow-lg shadow-cyan-500/30">
+              <FileText className="size-6" />
+            </div>
+            <div>
+              <p className="text-sm uppercase tracking-[0.18em] text-cyan-200">CV Screener</p>
+              <h1 className="text-xl font-semibold text-white">AI recruiter workspace</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-cyan-100">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
+              </span>
+              Live CV knowledgebase
+            </div>
+            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-200 sm:flex">
+              <ShieldCheck className="size-3.5 text-emerald-300" />
+              Source-backed answers
+            </div>
+          </div>
+        </header>
+
+        <div className="grid gap-6 lg:grid-cols-[1fr,1.35fr]">
+          <div className="space-y-4">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-sky-900/20 backdrop-blur">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-cyan-200">
+                    <Sparkles className="size-4" />
+                    Precision search, grounded in CVs
+                  </div>
+                  <h2 className="text-2xl font-semibold leading-tight text-white">
+                    Ask nuanced questions. Get concise, sourced answers.
+                  </h2>
+                  <p className="text-sm text-slate-300">
+                    Every response cites the underlying CV snippets, so you can move fast without guessing.
+                  </p>
+                </div>
+                <div className="hidden rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-slate-200 sm:block">
+                  {API_BASE_URL.replace("http://", "")}
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">CV Screener</h1>
-                <p className="text-sm text-muted-foreground">AI-powered candidate search</p>
+
+              <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                {exampleQuestions.map((q, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleExampleClick(q)}
+                    className="group flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-left text-sm text-slate-200 transition hover:-translate-y-0.5 hover:border-cyan-400/60 hover:bg-slate-900 hover:text-white"
+                    disabled={loading}
+                  >
+                    <ChevronRight className="size-4 text-cyan-300 transition group-hover:translate-x-0.5" />
+                    <span className="text-pretty">{q}</span>
+                  </button>
+                ))}
               </div>
             </div>
-            {messages.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setMessages([])
-                  setError(null)
-                }}
-              >
-                Clear Chat
-              </Button>
-            )}
           </div>
-        </div>
-      </header>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          <div className="container mx-auto px-4 py-6">
-            <div className="mx-auto max-w-4xl space-y-6">
-              {messages.length === 0 && (
-                <div className="space-y-6 py-12">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-3xl font-bold text-foreground text-balance">Find the perfect candidate</h2>
-                    <p className="text-muted-foreground text-lg">
-                      Ask questions about candidates and get instant answers from their CVs
+          <div className="rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-sky-900/30 backdrop-blur">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-cyan-200">Conversation</p>
+                <h3 className="text-lg font-semibold text-white">Ask about any candidate</h3>
+                <p className="text-xs text-slate-300">Responses include citations and stay within your CV data.</p>
+              </div>
+              {messages.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/20 bg-white/10 text-slate-100 hover:bg-white/20"
+                  onClick={() => {
+                    setMessages([])
+                    setError(null)
+                  }}
+                >
+                  Clear chat
+                </Button>
+              )}
+            </div>
+
+            <div className="flex h-[65vh] flex-col">
+              <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+                {messages.length === 0 && !loading && !error && (
+                  <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-white/10 bg-slate-900/40 p-5 text-left">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <Sparkles className="size-4 text-cyan-300" />
+                      Ready when you are
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Ask about skills, projects, or who fits a role. I&apos;ll return a concise, source-backed summary.
                     </p>
                   </div>
+                )}
 
-                  {/* Example Questions */}
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-muted-foreground text-center">Try asking:</p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {exampleQuestions.map((q, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleExampleClick(q)}
-                          className="group flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                          disabled={loading}
-                        >
-                          <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent-foreground transition-colors" />
-                          <span className="text-pretty">{q}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    {message.type === "assistant" && (
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-emerald-400 text-slate-950 shadow-lg shadow-cyan-500/30">
+                        <Bot className="size-4" />
+                      </div>
+                    )}
 
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-4 ${message.type === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {message.type === "assistant" && (
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary">
-                      <Bot className="size-4 text-primary-foreground" />
-                    </div>
-                  )}
+                    <div className={`flex-1 space-y-2 ${message.type === "user" ? "max-w-[82%]" : "max-w-full"}`}>
+                      <div
+                        className={`rounded-2xl px-4 py-3 text-sm ${
+                          message.type === "user"
+                            ? "ml-auto bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 text-slate-50 border border-emerald-300/30 shadow-lg shadow-emerald-900/30"
+                            : "bg-slate-900/70 border border-white/10 text-slate-50 shadow-lg shadow-slate-900/40"
+                        }`}
+                      >
+                        {message.type === "assistant" ? (
+                          <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-ul:my-2 prose-li:my-0">
+                            <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <p className="leading-relaxed">{message.content}</p>
+                        )}
+                      </div>
 
-                  <div className={`flex-1 space-y-2 ${message.type === "user" ? "max-w-[80%]" : "max-w-full"}`}>
-                    <div
-                      className={`rounded-lg p-4 ${
-                        message.type === "user"
-                          ? "bg-primary text-primary-foreground ml-auto"
-                          : "bg-card border border-border"
-                      }`}
-                    >
-                      <p className="leading-relaxed">{message.content}</p>
-                    </div>
+                      {message.type === "assistant" && message.sources && message.sources.length > 0 && (
+                        <div className="rounded-xl border border-white/10 bg-slate-900/60 p-3 shadow-lg shadow-slate-900/30">
+                          <button
+                            type="button"
+                            className="flex w-full items-center justify-between rounded-lg px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200 hover:text-white"
+                            onClick={() =>
+                              setOpenSources((prev) => ({
+                                ...prev,
+                                [message.id]: !prev[message.id],
+                              }))
+                            }
+                          >
+                            Sources
+                            <ChevronsUpDown className="size-3.5 text-cyan-200" />
+                          </button>
+                          {openSources[message.id] && (
+                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                              {message.sources.map((source, idx) => {
+                                const title = source.title || source.url || `Source ${idx + 1}`
+                                const linkUrl = toSourceLink(source.url)
+                                const citeNumber = idx + 1
+                                const CardInner = () => (
+                                  <div className="rounded-lg border border-white/10 bg-slate-950/50 p-3 text-xs text-slate-100 transition hover:border-cyan-400/50 hover:bg-slate-900/70">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <span className="font-semibold text-white line-clamp-1">{title}</span>
+                                      <span className="rounded-full border border-white/10 bg-slate-900/70 px-2 py-[2px] text-[11px] font-semibold text-cyan-200">
+                                        {citeNumber}
+                                      </span>
+                                    </div>
+                                    {source.url && (
+                                      <p className="mt-1 text-[11px] text-slate-400 line-clamp-1" title={source.url}>
+                                        {source.url}
+                                      </p>
+                                    )}
+                                    {source.content && (
+                                      <p className="mt-2 text-[11px] text-slate-200 leading-relaxed line-clamp-3">
+                                        {source.content}
+                                      </p>
+                                    )}
+                                    {linkUrl ? (
+                                      <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-200">
+                                        <ExternalLink className="size-3" />
+                                        View CV
+                                      </div>
+                                    ) : (
+                                      <p className="mt-2 text-[11px] text-slate-400">No direct link available</p>
+                                    )}
+                                  </div>
+                                )
 
-                    {/* Sources for assistant messages */}
-                    {message.type === "assistant" && message.sources && message.sources.length > 0 && (
-                      <div className="space-y-2 pl-4">
-                        <p className="text-xs font-medium text-muted-foreground">
-                          Relevant CV Sections ({message.sources.length})
-                        </p>
-                        <div className="space-y-2">
-                          {message.sources.map((source, idx) => (
-                            <Card key={idx} className="bg-muted/50 border-border p-3">
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                  {source.candidate_name && (
-                                    <span className="text-xs font-medium text-foreground">{source.candidate_name}</span>
-                                  )}
-                                  {source.score && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {(source.score * 100).toFixed(1)}%
-                                    </span>
-                                  )}
-                                </div>
-                                {source.content && (
-                                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                                    {source.content}
-                                  </p>
-                                )}
-                              </div>
-                            </Card>
-                          ))}
+                                return (
+                                  <div key={idx}>
+                                    {linkUrl ? (
+                                      <a href={linkUrl} target="_blank" rel="noreferrer" className="block">
+                                        <CardInner />
+                                      </a>
+                                    ) : (
+                                      <CardInner />
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
                         </div>
+                      )}
+                    </div>
+
+                    {message.type === "user" && (
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-slate-900/70 text-slate-200">
+                        <User className="size-4" />
                       </div>
                     )}
                   </div>
+                ))}
 
-                  {message.type === "user" && (
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <User className="size-4 text-muted-foreground" />
+                {loading && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-emerald-400 text-slate-950 shadow-lg shadow-cyan-500/30">
+                      <Bot className="size-4" />
                     </div>
-                  )}
-                </div>
-              ))}
-
-              {loading && (
-                <div className="flex gap-4">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary">
-                    <Bot className="size-4 text-primary-foreground" />
-                  </div>
-                  <div className="rounded-lg border border-border bg-card p-4">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Searching CVs...</span>
+                    <div className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-sm text-slate-200 shadow-lg shadow-slate-900/40">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="size-4 animate-spin text-cyan-300" />
+                        Searching CVs...
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Error Display */}
-              {error && (
-                <Card className="border-destructive/50 bg-destructive/10 p-4">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-semibold text-destructive">Error</h3>
-                    <p className="text-xs text-destructive/90">{error}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Make sure the CV Screener API is running on {API_BASE_URL}
-                    </p>
-                  </div>
-                </Card>
-              )}
+                {error && (
+                  <Card className="border-destructive/40 bg-destructive/15 text-destructive-foreground">
+                    <div className="space-y-1 p-4">
+                      <h3 className="text-sm font-semibold text-white">Error</h3>
+                      <p className="text-xs text-red-100/90">{error}</p>
+                      <p className="text-xs text-slate-200">
+                        Make sure the CV Screener API is running on {API_BASE_URL}
+                      </p>
+                    </div>
+                  </Card>
+                )}
 
-              <div ref={messagesEndRef} />
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="border-t border-white/10 bg-slate-900/60 px-5 py-4 backdrop-blur">
+                <form onSubmit={handleQuery} className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Ask about a skill, candidate, or role..."
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    className="flex-1 border-white/10 bg-slate-950/60 text-slate-50 placeholder:text-slate-400"
+                    disabled={loading}
+                  />
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-br from-cyan-500 to-emerald-400 text-slate-950 shadow-lg shadow-cyan-500/30 hover:from-cyan-400 hover:to-emerald-300"
+                    disabled={loading || !question.trim()}
+                  >
+                    {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                  </Button>
+                </form>
+              </div>
             </div>
-          </div>
-        </div>
-      </main>
-
-      <div className="border-t border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="mx-auto max-w-4xl">
-            <form onSubmit={handleQuery} className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Ask a question about candidates..."
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                className="flex-1 bg-background"
-                disabled={loading}
-              />
-              <Button type="submit" disabled={loading || !question.trim()}>
-                {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-              </Button>
-            </form>
           </div>
         </div>
       </div>

@@ -128,48 +128,14 @@ class ConversationalRAGChain:
             return response[: match.start()].rstrip()
         return response.rstrip()
 
-    def _format_sources_footer(
-            self, retrieved_docs: List[Dict], cited_numbers: Optional[List[int]] = None
-    ) -> str:
-        """
-        Create a deterministic Sources consulted section aligned with retrieved docs.
-        """
-        if not retrieved_docs:
-            return "**Sources consulted:**\n(No sources retrieved)"
-
-        max_index = len(retrieved_docs)
-        indices: List[int] = list(range(1, max_index + 1))
-
-        if cited_numbers:
-            in_range = [i for i in sorted(set(cited_numbers)) if 1 <= i <= max_index]
-            if in_range:
-                indices = in_range
-            dropped = sorted(set(cited_numbers) - set(in_range))
-            if dropped:
-                logger.warning(
-                    "Dropping citations outside retrieved range: %s", dropped
-                )
-
-        lines = ["**Sources consulted:**"]
-        for idx in indices:
-            doc = retrieved_docs[idx - 1]
-            title = doc.get("title") or "Untitled source"
-            url = doc.get("url") or "N/A"
-            lines.append(f"{idx}. {title} - {url}")
-        return "\n".join(lines)
-
     def _normalize_response_citations(
             self, response: str, retrieved_docs: List[Dict]
     ) -> str:
         """
-        Ensure the sources footer aligns with the indices used in the answer.
+        Remove any sources footer. The UI shows sources separately.
         """
-        cited_numbers = [
-            int(match.group(1)) for match in re.finditer(r"\[(\d+)\]", response)
-        ]
-        footer = self._format_sources_footer(retrieved_docs, cited_numbers)
-        body = self._strip_sources_section(response)
-        return f"{body}\n\n{footer}"
+        _ = retrieved_docs  # kept for signature compatibility
+        return self._strip_sources_section(response)
 
     def _format_chat_history(self) -> str:
         """

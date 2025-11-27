@@ -45,7 +45,7 @@ docker compose up web
 ### Component Tests
 
 - `make test-embedder`
-- `make test-app`
+- `make test-api`
 
 ## API
 
@@ -80,15 +80,58 @@ Example response:
 }
 ```
 
-## Data Flow
+## Architecture & Data Flow
 
-1) **Feed**: PDF resumes live in `feed/`.
-2) **Embedder**: `docker compose run --rm embedder python embedder.py`
-    - Extracts text from PDFs, chunks, embeds, and stores documents + embeddings in PostgreSQL.
-    - Uses content hashes to skip unchanged CVs; `--force` reprocesses everything.
-3) **API**: `docker compose up api`
-    - Retrieves with pgvector, optional BM25 re-ranking, prompt guardrails tuned for CV Q&A.
-    - CORS enabled for easy React integration.
+```mermaid
+flowchart LR
+    Feed[feed/*.pdf\nCV PDFs] --> Loader[CVLoader\npypdf + content hash]
+    Loader --> Chunker[DocumentChunker\nrecursive splitter]
+    Chunker --> Embed[EmbeddingGenerator\nOpenAI embeddings]
+    Embed --> DB[(PostgreSQL + pgvector\nembeddings + documents)]
+
+    User[User / Web UI] --> API[FastAPI /query\nConversationalRAGChain]
+    API --> Retriever[Hybrid retriever\nvector + BM25]
+    Retriever --> DB
+    DB --> Retriever
+    Retriever --> Prompt[PromptOptimizer\nPromptTemplate + guardrails]
+    Prompt --> LLM[OpenAI Chat Completions]
+    LLM --> API
+    API --> Cache[Response cache\nRedis or in-memory]
+    Cache -. reuse .-> API
+    API --> Metrics[Prometheus /metrics]
+    API --> Web[Next.js frontend]
+```
+
+**Ingestion pipeline**
+
+- Drop PDFs in `feed/`; `embedder` service reads them with `CVLoader` (pypdf) and skips unchanged files via MD5 hashes
+  of the extracted text.
+- `DocumentChunker` (recursive character splitter) creates overlapping chunks; `EmbeddingGenerator` batches them through
+  OpenAI embeddings with retries.
+- Chunks and document metadata are stored in PostgreSQL + pgvector via `VectorStore`, keeping content + embeddings
+  aligned for retrieval.
+
+**Serving path**
+
+- FastAPI (`/query`) wires `VectorRetriever` over pgvector plus optional BM25 fusion (`HybridRetriever`) for hybrid
+  ranking.
+- Responses are cached (Redis if `REDIS_URL`, otherwise in-memory) and instrumented with Prometheus metrics.
+- The Next.js web UI and curl clients both call the same API; CORS is open for quick integration.
+
+## Prompt Construction (how answers are formed)
+
+- `ConversationalRAGChain` (api/rag/chain.py) normalizes the user question, fetches top-K chunks, and formats them as
+  numbered sources with explicit “use and cite” instructions.
+- `PromptOptimizer` (api/rag/optimizer.py) runs the query through `QueryAnalyzer` to (a) force English, (b) classify
+  complexity, and (c) optionally expand ultra-short queries using recent chat history.
+- The system prompt (api/rag/prompt_template.py) stacks three layers: META instructions (grounding, privacy,
+  English-only, no path leaks), domain knowledge notes about CV structure, and task rules (markdown structure, [N]
+  citations, single **Sources consulted** block).
+- The user prompt injects few-shot examples, the retrieved context, prior conversation, and the new question under clear
+  section headers; final turn is a “YOUR RESPONSE” cue to keep the model focused.
+- Messages are sent as `[{"role": "system"}, {"role": "user"}]` to OpenAI Chat. After generation, guardrails validate
+  citations/length/language, sources footers are normalized, the conversation history is extended, and the answer is
+  cached for repeat hits.
 
 ## Configuration (env)
 
