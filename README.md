@@ -1,15 +1,17 @@
 # CV Screener
 
-Pipeline to ingest PDF resumes, embed them into PostgreSQL + pgvector, and expose a FastAPI endpoint for querying
-candidate information with RAG.
+End-to-end CV Screener: ingest PDF resumes, embed them into PostgreSQL + pgvector, serve a RAG API with hybrid
+retrieval/caching/metrics, and a Next.js recruiter UI for source-backed answers.
 
 ## Stack
 
 Technologies and services used across the app.
 
-- Docker Compose (PostgreSQL + pgvector, Embedder, API)
-- OpenAI `text-embedding-3-small` for embeddings and `gpt-5-mini-2025-08-07` for generation
-- FastAPI with hybrid retrieval (vector + BM25) and Prometheus metrics
+- Docker Compose orchestration for PostgreSQL + pgvector, Embedder, API, and Web UI.
+- OpenAI `text-embedding-3-small` (embeddings) and `gpt-5-mini-2025-08-07` (generation).
+- FastAPI + hybrid retrieval (`VectorRetriever` + BM25 rerank) with optional Redis caching.
+- Observability with Prometheus metrics; caching via Redis or in-memory fallback.
+- Next.js (App Router), Tailwind 4, shadcn/ui frontend for the recruiter chat UI.
 
 ## Quick Start
 
@@ -24,13 +26,13 @@ cp .env.example .env
 
 2) Drop your CV PDFs into `feed/`.
 
-3) Run the full pipeline (DB -> embed feed -> start API):
+3) Run the full pipeline (DB -> embed feed -> build API -> start web UI):
 
 ```bash
 make run
+# Web UI:  http://localhost:3000
 # API:     http://localhost:8000
 # Metrics: http://localhost:9000/metrics
-# Web UI:  http://localhost:3000
 ```
 
 4) (Optional) Start the Next.js web UI against the running API:
@@ -54,41 +56,6 @@ Focused test commands for each component.
 
 - `make test-embedder`
 - `make test-api`
-
-## API
-
-Public endpoints exposed by the FastAPI service.
-
-- `GET /health` — readiness check
-- `POST /query` — ask about candidates
-
-Example request (queries and responses are English-only):
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What AWS experience does Evelyn Hamilton have?"}'
-```
-
-Example response:
-
-```json
-{
-  "answer": "Evelyn Hamilton has built data pipelines on AWS using Glue and Lambda, and models in Redshift [1].",
-  "sources": [
-    {
-      "title": "CV Evelyn Hamilton",
-      "url": "cv://cv-01-evelyn-hamilton",
-      "similarity": 0.91
-    }
-  ],
-  "metadata": {
-    "model": "gpt-5-mini-2025-08-07",
-    "retrieved": 3,
-    "top_k": 5
-  }
-}
-```
 
 ## Architecture & Data Flow
 
@@ -158,6 +125,41 @@ Frontend chat experience for querying the CV knowledge base.
 - Includes preset example questions, optimistic loading state, and inline error messaging when the API is unreachable.
 - Run locally with `cd web && pnpm install && pnpm dev` (or `npm run dev`). In Docker, `docker compose up web` binds to
   `WEB_PORT` (default 3000) and points at the API via `NEXT_PUBLIC_API_URL`.
+
+## API
+
+Public endpoints exposed by the FastAPI service.
+
+- `GET /health` — readiness check
+- `POST /query` — ask about candidates
+
+Example request (queries and responses are English-only):
+
+```bash
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What AWS experience does Evelyn Hamilton have?"}'
+```
+
+Example response:
+
+```json
+{
+  "answer": "Evelyn Hamilton has built data pipelines on AWS using Glue and Lambda, and models in Redshift [1].",
+  "sources": [
+    {
+      "title": "CV Evelyn Hamilton",
+      "url": "cv://cv-01-evelyn-hamilton",
+      "similarity": 0.91
+    }
+  ],
+  "metadata": {
+    "model": "gpt-5-mini-2025-08-07",
+    "retrieved": 3,
+    "top_k": 5
+  }
+}
+```
 
 ## Prompt Construction (how answers are formed)
 
@@ -230,4 +232,4 @@ How the project is validated and how to run the suites.
 
 ## License
 
-MIT License. See `LICENSE` for details.
+MIT License. See [LICENSE](LICENSE) for details.
